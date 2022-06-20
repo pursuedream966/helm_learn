@@ -82,16 +82,157 @@ helm repo update
 
 ### 3.1.2 删除库
 
-```
+```sh
 # helm repo remove [REPO1 [REPO2 ...]] [flags]
 helm repo remove ali-stable stablecharts
 ```
 
-# 4. helm基础命令
+### 3.1.3 列出库
+
+```sh
+helm repo list
+```
+
+### 3.1.4 其他
+
+```sh
+# 列出helm环境变量
+helm env
+# helm版本查看
+helm version
+```
+
+
+
+# 4. helm常用命令
+
+## 4.1 搜索镜像
+
+```sh
+# 从中央仓库搜索
+helm search hub nginx
+# 从自己添加的库中搜索
+helm search repo nginx
+```
+
+## 4.2 安装与卸载
+
+```sh
+# 安装 -n代表要安装到k8s的哪个namespace下, helm-test要在k8s中先创建出来
+helm install mynginx apphub/nginx -n helm-test
+# 查看安装的内容
+helm list -n helm-test
+
+# 查看状态
+helm status mynginx -n helm-test
+
+# 使用 k8s命令查看安装的内容 
+kubectl get deploy,svc,pod -n helm-test -o wide
+
+# 卸载
+helm uninstall mynginx -n helm-test
+```
+
+## 4.3 升级，查询历史与回滚
+
+```sh
+# 1.拉取离线配置到本地
+helm pull apphub/nginx
+
+# 1.1 命令参数升级
+helm upgrade --set service.port=8080 mynginx . -n helm-test
+# 1.2 修改values.yaml方式升级
+helm upgrade -f values.yaml mynginx . -n helm-test
+
+# 2.查看版本历史
+helm history mynginx -n helm-test
+
+# 3.回滚到指定版本
+helm rollback mynginx 1 -n helm-test
+
+# 4.在线查看在库中已存在的 chart配置
+helm show chart apphub/nginx
+
+```
+
+## 4.4 离线修改安装
+
+```sh
+# 以redis为例子,由于别人制作的redis需要pv，而我们仅是测试，所以需要禁用pvc的配置
+helm pull apphub/redis
+tar -zxvf redis-10.5.3.tgz
+
+# 修改无需密码连接 修改无需使用pv 修改无需使用主从配置
+# 修改values.yaml的一些内容
+
+# 安装
+helm install my-edit-redis . -n helm-test
+
+# 测试连接安装好的redis
+# redis-cli -h host -p port -a password
+
+```
+
+## 4.5 自定义模板
+
+```sh
+# 使用命令创建helm模板文件,根据需要修改内容或新增yaml文件，删除yaml文件
+helm create hyy-my-nginx-charts
+
+# 简单验证文件编写是否存在较大的问题
+helm lint ./hyy-my-nginx-charts
+
+# 安装
+helm install hyy-my-nginx-charts ./hyy-my-nginx-charts -n helm-test
+
+# 查看部署的helm文件
+helm get manifest hyy-my-nginx-charts -n helm-test
+
+# 打包分发
+helm package hyy-my-nginx-charts
+
+# 上传到仓库 该命令未真实使用
+helm push hyy-my-nginx-charts-0.1.0.tgz myRepoName
+```
+
+## 4.6 helm插件
+
+```sh
+# 比如插件地址 https://github.com/chartmuseum/helm-push；若无法正常连接，可下载下来后离线安装
+# 查看已安装插件
+helm plugin list
+
+# 安装插件 helm plugin install [options] <path|url>... [flags]
+helm plugin install https://github.com/chartmuseum/helm-push
+
+# 卸载插件 
+helm plugin uninstall pluginName
+
+# 更新插件
+helm plugin update pluginName
+```
+
+
+
+## 4.7 其他
+
+```sh
+# 查看说明信息
+helm get notes hyy-myedit-nginx -n helm-test
+# 查看values配置
+helm get values hyy-myedit-nginx -n helm-test
+
+```
 
 
 
 ## 4.x 参考文档
 
 - https://www.hellodemos.com/hello-helm-command/helm-command-helm-repo-remove.html
-- 
+- https://v2.helm.sh/docs/developing_charts/#predefined-values
+- https://juejin.cn/post/6844904199818313735
+- helm模板语法解释
+  - https://blog.csdn.net/weixin_45015255/article/details/117217876
+  - http://www.bubuko.com/infodetail-3666223.html
+- helm常用函数
+  - https://www.csdn.net/tags/Ntjagg2sNjUxMjYtYmxvZwO0O0OO0O0O.html
