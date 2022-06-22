@@ -177,7 +177,7 @@ helm install my-edit-redis . -n helm-test
 
 ```sh
 # 使用命令创建helm模板文件,根据需要修改内容或新增yaml文件，删除yaml文件
-helm create hyy-my-nginx-charts
+helm create hyy-my-charts
 
 # 简单验证文件编写是否存在较大的问题
 helm lint ./hyy-my-nginx-charts
